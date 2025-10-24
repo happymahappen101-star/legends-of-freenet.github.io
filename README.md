@@ -1,1 +1,1 @@
-<input type
+<input type="file">
