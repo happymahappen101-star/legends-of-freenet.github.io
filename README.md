@@ -2,9 +2,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOF Login Portal</title>
+  <title>Hacker Login Portal</title>
   <style>
-    /* Reset defaults */
     * {
       margin: 0;
       padding: 0;
@@ -22,7 +21,6 @@
       overflow: hidden;
     }
 
-    /* Background hacker matrix animation */
     body::before {
       content: "";
       position: absolute;
@@ -63,7 +61,7 @@
       font-size: 1.8em;
       color: #00ff99;
       text-shadow: 0 0 10px #00ff99;
-      animation: glowPulse 1.5s infinite alternate;
+      animation: flicker 3s infinite, glowPulse 1.5s infinite alternate;
     }
 
     @keyframes glowPulse {
@@ -133,14 +131,9 @@
       text-shadow: 0 0 5px #00ff99;
     }
 
-    /* Terminal-style flicker animation */
     @keyframes flicker {
       0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
       20%, 24%, 55% { opacity: 0.3; }
-    }
-
-    .login-box h2 {
-      animation: flicker 3s infinite, glowPulse 1.5s infinite alternate;
     }
 
     /* Music control button */
@@ -162,9 +155,7 @@
       transition: transform 0.12s ease;
     }
     .music-btn:active { transform: scale(0.96); }
-
     .music-btn svg { fill: #00ff99; width: 26px; height: 26px; }
-
     .music-label {
       position: fixed;
       left: 86px;
@@ -175,21 +166,19 @@
       text-shadow: 0 0 6px #00ff99;
       font-weight: bold;
     }
-
-    /* Hide native audio controls */
     audio { display: none; }
   </style>
 </head>
 <body>
 
   <div class="login-box" id="loginBox">
-    <h2>ACCESS</h2>
-    <form>
+    <h2>ACCESS TERMINAL</h2>
+    <form id="loginForm">
       <div class="input-box">
-        <input type="text" placeholder="Username" required />
+        <input type="text" placeholder="Username" id="username" required />
       </div>
       <div class="input-box">
-        <input type="password" placeholder="Password" required />
+        <input type="password" placeholder="Password" id="password" required />
       </div>
       <button type="submit" class="btn">LOGIN</button>
       <div class="signup-link">
@@ -198,73 +187,43 @@
     </form>
   </div>
 
-  <!-- Background audio (replace src with your chosen song/file) -->
   <audio id="bg-music" src="music/cyber-ambient.mp3" loop preload="auto"></audio>
-
-  <!-- Floating music control -->
   <div class="music-btn" id="musicBtn" title="Play / Pause music" aria-label="Play music">
-    <!-- Play icon (will toggle) -->
-    <svg id="musicIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 5v14l11-7z"/>
-    </svg>
+    <svg id="musicIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
   </div>
   <div class="music-label" id="musicLabel">Cyber Ambient</div>
 
   <script>
-    (function() {
-      const audio = document.getElementById('bg-music');
-      const btn = document.getElementById('musicBtn');
-      const icon = document.getElementById('musicIcon');
-      const label = document.getElementById('musicLabel');
+    // Redirect to index.html when login is submitted
+    document.getElementById("loginForm").addEventListener("submit", function(event) {
+      event.preventDefault(); // Stop actual form submit
+      window.location.href = "index.html"; // Go to your main page
+    });
 
-      // Utility: update icon based on state
-      function updateIcon(isPlaying) {
-        if (isPlaying) {
-          // Pause icon
-          icon.innerHTML = '<path d="M6 19h4V5H6v14zM14 5v14h4V5h-4z"/>';
-          btn.title = 'Pause music';
-          btn.setAttribute('aria-label', 'Pause music');
-        } else {
-          // Play icon
-          icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-          btn.title = 'Play music';
-          btn.setAttribute('aria-label', 'Play music');
-        }
+    // Music player controls
+    const audio = document.getElementById('bg-music');
+    const btn = document.getElementById('musicBtn');
+    const icon = document.getElementById('musicIcon');
+    const label = document.getElementById('musicLabel');
+
+    function updateIcon(isPlaying) {
+      icon.innerHTML = isPlaying
+        ? '<path d="M6 19h4V5H6v14zM14 5v14h4V5h-4z"/>'
+        : '<path d="M8 5v14l11-7z"/>';
+    }
+
+    btn.addEventListener('click', function() {
+      if (audio.paused) {
+        audio.play();
+        updateIcon(true);
+      } else {
+        audio.pause();
+        updateIcon(false);
       }
+    });
 
-      // Try to autoplay after first user interaction (most browsers require user gesture)
-      function tryPlay() {
-        audio.play().then(() => {
-          updateIcon(true);
-        }).catch(() => {
-          updateIcon(false);
-        });
-        // remove this listener after first run
-        document.removeEventListener('click', tryPlay);
-      }
-
-      document.addEventListener('click', tryPlay);
-
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        if (audio.paused) {
-          audio.play().then(() => updateIcon(true)).catch(() => updateIcon(false));
-        } else {
-          audio.pause();
-          updateIcon(false);
-        }
-      });
-
-      // Update label from filename (nice touch)
-      try {
-        const src = audio.getAttribute('src') || '';
-        const name = src.split('/').pop() || 'Background music';
-        label.textContent = decodeURIComponent(name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
-      } catch(e) { /* ignore */ }
-
-      // Optional: allow clicking the login box to start music (nice UX)
-      document.getElementById('loginBox').addEventListener('click', tryPlay);
-    })();
+    // Try autoplay after first user click
+    document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
   </script>
 
 </body>
