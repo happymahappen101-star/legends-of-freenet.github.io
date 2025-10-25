@@ -1,9 +1,8 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hacker Login Portal</title>
+  <title>LOF Login Portal</title>
   <style>
     /* Reset defaults */
     * {
@@ -143,12 +142,48 @@
     .login-box h2 {
       animation: flicker 3s infinite, glowPulse 1.5s infinite alternate;
     }
+
+    /* Music control button */
+    .music-btn {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      z-index: 3;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid #00ff99;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 0 12px #00ff99;
+      transition: transform 0.12s ease;
+    }
+    .music-btn:active { transform: scale(0.96); }
+
+    .music-btn svg { fill: #00ff99; width: 26px; height: 26px; }
+
+    .music-label {
+      position: fixed;
+      left: 86px;
+      bottom: 32px;
+      z-index: 3;
+      color: #00ff99;
+      font-size: 0.9em;
+      text-shadow: 0 0 6px #00ff99;
+      font-weight: bold;
+    }
+
+    /* Hide native audio controls */
+    audio { display: none; }
   </style>
 </head>
 <body>
 
-  <div class="login-box">
-    <h2>ACCESS TERMINAL</h2>
+  <div class="login-box" id="loginBox">
+    <h2>ACCESS</h2>
     <form>
       <div class="input-box">
         <input type="text" placeholder="Username" required />
@@ -162,6 +197,75 @@
       </div>
     </form>
   </div>
+
+  <!-- Background audio (replace src with your chosen song/file) -->
+  <audio id="bg-music" src="music/cyber-ambient.mp3" loop preload="auto"></audio>
+
+  <!-- Floating music control -->
+  <div class="music-btn" id="musicBtn" title="Play / Pause music" aria-label="Play music">
+    <!-- Play icon (will toggle) -->
+    <svg id="musicIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 5v14l11-7z"/>
+    </svg>
+  </div>
+  <div class="music-label" id="musicLabel">Cyber Ambient</div>
+
+  <script>
+    (function() {
+      const audio = document.getElementById('bg-music');
+      const btn = document.getElementById('musicBtn');
+      const icon = document.getElementById('musicIcon');
+      const label = document.getElementById('musicLabel');
+
+      // Utility: update icon based on state
+      function updateIcon(isPlaying) {
+        if (isPlaying) {
+          // Pause icon
+          icon.innerHTML = '<path d="M6 19h4V5H6v14zM14 5v14h4V5h-4z"/>';
+          btn.title = 'Pause music';
+          btn.setAttribute('aria-label', 'Pause music');
+        } else {
+          // Play icon
+          icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+          btn.title = 'Play music';
+          btn.setAttribute('aria-label', 'Play music');
+        }
+      }
+
+      // Try to autoplay after first user interaction (most browsers require user gesture)
+      function tryPlay() {
+        audio.play().then(() => {
+          updateIcon(true);
+        }).catch(() => {
+          updateIcon(false);
+        });
+        // remove this listener after first run
+        document.removeEventListener('click', tryPlay);
+      }
+
+      document.addEventListener('click', tryPlay);
+
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (audio.paused) {
+          audio.play().then(() => updateIcon(true)).catch(() => updateIcon(false));
+        } else {
+          audio.pause();
+          updateIcon(false);
+        }
+      });
+
+      // Update label from filename (nice touch)
+      try {
+        const src = audio.getAttribute('src') || '';
+        const name = src.split('/').pop() || 'Background music';
+        label.textContent = decodeURIComponent(name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
+      } catch(e) { /* ignore */ }
+
+      // Optional: allow clicking the login box to start music (nice UX)
+      document.getElementById('loginBox').addEventListener('click', tryPlay);
+    })();
+  </script>
 
 </body>
 </html>
